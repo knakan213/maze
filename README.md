@@ -37,16 +37,14 @@ python maze.py
 ### コマンドラインオプション
 以下の通り、コマンドラインオプションにより迷路のサイズや3D表示部の大きさ、迷路の生成アルゴリズムを指定することが出来ます。
 ```
-usage: maze.py [-h] [--width WIDTH] [--height HEIGHT] [--vwidth VWIDTH]
-               [--vheight VHEIGHT] [--gen GEN]
+usage: maze.py [-h] [--width WIDTH] [--height HEIGHT] [--vsize VSIZE] [--gen GEN]
 
 options:
-  -h, --help         show this help message and exit
-  --width WIDTH      迷路の横幅(既定値 18)
-  --height HEIGHT    迷路の縦幅(既定値 9)
-  --vwidth VWIDTH    3D迷路表示部の横幅(既定値 1280)
-  --vheight VHEIGHT  3D迷路表示部の縦幅(既定値 1024)
-  --gen GEN          迷路生成アルゴリズム(prim又はdfs)
+  -h, --help       show this help message and exit
+  --width WIDTH    迷路の横幅(既定値 18)
+  --height HEIGHT  迷路の縦幅(既定値 9)
+  --vsize VSIZE    3D迷路表示部の一辺の長さ(既定値 1024)
+  --gen GEN        迷路生成アルゴリズム(prim又はdfs)
 ```
 - 生成アルゴリズムにおいて迷路は正方形グリッドの各セルが上下左右のセルとの間に壁を持ったり持たなかったりするパターンとしてモデル化されており、上記オプションで指定する迷路のサイズもこの正方形グリッドの縦横のセル数のことですが、実際表示されるのはそれを壁にも空間セルと同じ厚みを持たせ各セル壁か空間かの二値グリッドとして表わしたものであり、迷路のサイズを横w、縦hと指定した場合、横2w+1、縦2h+1のグリッドになります。
 - 生成アルゴリズムは`prim`を指定した場合[randomized Prim's](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Iterative_randomized_Prim's_algorithm_(without_stack,_without_sets))、`dfs`を指定した場合[recursive backtracker](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search)になります。
