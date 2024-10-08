@@ -4,6 +4,7 @@ import cv2
 import argparse
 import sys
 
+title = 'maze'
 directions = ((1, 0), (0, 1), (-1, 0), (0, -1))
 
 def randomized_prim(w, h):
@@ -11,7 +12,7 @@ def randomized_prim(w, h):
     unvisited = {(x, y) for x in range(w) for y in range(h)}
     x, y = map(random.randrange, (w, h))
     unvisited.remove((x, y))
-    front = [(x, y)] # visited cells that neighbors unvisited cells
+    front = [(x, y)] # visited cells that neighbor unvisited cells
     while unvisited:
         x, y = random.choice(front)
         dx, dy = random.choice([(dx, dy) for dx, dy in directions
@@ -51,42 +52,46 @@ def main(w = 18, h = 9, vw = 1280, vh = 1024, make_maze = randomized_prim):
         a = max(vw, vh)
         cv2.line(img, (int(vw/2+a*x0), int(vh/2+a*y0)),
                  (int(vw/2+a*x1), int(vh/2+a*y1)), 255)
+
     maze = make_maze(w, h)
     w, h = w*2+1, h*2+1
     vw = max(vw, w*16)
 
     x, y, dx, dy = 1, 1, 1, 0
-    k = -1
-    cv2.namedWindow(title := 'maze')
-    while k != ord('q') and window_exist(title):
-        if k == ord('w') and not maze[y+dy][x+dx]:
+    k = None
+    cv2.namedWindow(title)
+    while k != 'q' and window_exist(title):
+        if k == 'w' and not maze[y+dy][x+dx]:
             x, y = x+dx, y+dy
-        elif k == ord('s') and not maze[y-dy][x-dx]:
+        elif k == 's' and not maze[y-dy][x-dx]:
             x, y = x-dx, y-dy
-        elif k == ord('a'):
+        elif k == 'a':
             dx, dy = dy, -dx
-        elif k == ord('d'):
+        elif k == 'd':
             dx, dy = -dy, dx
             
         img = np.zeros((vh + h*16, vw), np.uint8)
-        n = 0
-        z0 = 1/2
-        while maze[y+n*dy][x+n*dx] == 0:
-            z1 = 1/(4+8*n)
-            for lr in (-1, 1):
-                for ud in (-1, 1):
-                    if maze[y+n*dy+dx*lr][x+n*dx-dy*lr]:
-                        line(z0*lr, z0*ud, z1*lr, z1*ud)
-                    else:
-                        line(z0*lr, z0*ud, z0*lr, 0)
-                        line(z0*lr, z1*ud, z1*lr, z1*ud)
-                    if maze[y+n*dy+dy][x+n*dx+dx] == maze[y+n*dy+dx*lr][x+n*dx-dy*lr]:
-                        line(z1*lr, 0, z1*lr, z1*ud)
-            z0 = z1
-            n += 1
-        for ud in (-1, 1):
-            line(-z0, z0*ud, z0, z0*ud)
 
+        # 3D描画
+        n, z0, z1 = 0, 2, 4
+        # 現在位置から視線の方向に壁に当るまで一歩づつ進む
+        while maze[y+n*dy][x+n*dx] == 0:
+            for lr in (-1, 1): # 左右
+                for ud in (-1, 1): # 上下
+                    if maze[y+n*dy+dx*lr][x+n*dx-dy*lr]: # 横が壁の場合
+                        line(lr/z0, ud/z0, lr/z1, ud/z1) # 奥に伸びる線
+                    else: # 横が道の場合
+                        if n:
+                            line(lr/z0, ud/z0, lr/z0, 0) # 手前の縦線
+                        line(lr/z0, ud/z1, lr/z1, ud/z1) # 奥の横線
+                    if (maze[y+n*dy+dy][x+n*dx+dx] ==      # 横と一歩先のセルが
+                        maze[y+n*dy+dx*lr][x+n*dx-dy*lr]): # 共に壁か共に道の場合
+                        line(lr/z1, 0, lr/z1, ud/z1) # 奥の縦線
+            n, z0, z1 = n+1, z1, z1+8
+        for ud in (-1, 1): # 上下
+            line(-1/z0, ud/z0, 1/z0, ud/z0) # 最奥の横線
+
+        # 2D描画
         x0, y0 = vw//2-w*8, vh
         for j in range(h):
             for i in range(w):
@@ -95,8 +100,9 @@ def main(w = 18, h = 9, vw = 1280, vh = 1024, make_maze = randomized_prim):
         cv2.arrowedLine(img, (x0+x*16+8-dx*6, y0+y*16+8-dy*6),
                         (x0+x*16+8+dx*5, y0+y*16+8+dy*5),
                         255, tipLength=0.5, thickness = 2)
+
         cv2.imshow(title, img)
-        k = cv2.waitKey(50)
+        k = chr(max(0, cv2.waitKey(50)))
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
