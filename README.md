@@ -1,5 +1,5 @@
 # Maze
-[randomized Prim's](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Iterative_randomized_Prim's_algorithm_(without_stack,_without_sets))や[recursive backtracker](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search)といった迷路生成アルゴリズムによって生成した迷路をの中を、[Maze War](https://en.wikipedia.org/wiki/Maze_(1973_video_game))風の一人称視点で歩き回ることの出来るシミュレーションです。歩き回ることが出来るだけでゲーム性はありません。
+ランダムに生成した迷路をの中を、[Maze War](https://en.wikipedia.org/wiki/Maze_(1973_video_game))風の一人称視点で歩き回ることの出来るシミュレーションです。歩き回ることが出来るだけでゲーム性はありません。
 
 ## 必要環境
 - Python3
@@ -35,7 +35,7 @@ python maze.py
 | q    | シミュレーションを終了する |
 
 ### コマンドラインオプション
-以下の通り、コマンドラインオプションにより迷路や3D表示部の大きさ、迷路の生成アルゴリズムを指定することが出来ます。
+以下の通り、コマンドラインオプションにより迷路のサイズや3D表示部の大きさ、迷路の生成アルゴリズムを指定することが出来ます。
 ```
 usage: maze.py [-h] [--width WIDTH] [--height HEIGHT] [--vwidth VWIDTH]
                [--vheight VHEIGHT] [--gen GEN]
@@ -48,3 +48,5 @@ options:
   --vheight VHEIGHT  3D迷路表示部の縦幅(既定値 1024)
   --gen GEN          迷路生成アルゴリズム(prim又はdfs)
 ```
+- 生成アルゴリズムにおいて迷路は正方形グリッドの各セルが上下左右のセルとの間に壁を持ったり持たなかったりするパターンとしてモデル化されており、上記オプションで指定する迷路のサイズもこの正方形グリッドの縦横のセル数のことですが、実際表示されるのはそれを壁にも空間セルと同じ厚みを持たせ各セル壁か空間かの二値グリッドとして表わしたものであり、迷路のサイズを横w、縦hと指定した場合、横2w+1、縦2h+1のグリッドになります。
+- 生成アルゴリズムは`prim`を指定した場合[randomized Prim's](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Iterative_randomized_Prim's_algorithm_(without_stack,_without_sets))、`dfs`を指定した場合[recursive backtracker](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search)になります。
