@@ -47,15 +47,14 @@ def window_exist(name):
         r = cv2.getWindowProperty(name, cv2.WND_PROP_AUTOSIZE)
     return r > 0
 
-def main(w = 18, h = 9, vw = 1280, vh = 1024, make_maze = randomized_prim):
+def main(w, h, vsize, make_maze):
     def line(x0, y0, x1, y1):
-        a = max(vw, vh)
-        cv2.line(img, (int(vw/2+a*x0), int(vh/2+a*y0)),
-                 (int(vw/2+a*x1), int(vh/2+a*y1)), 255)
+        cv2.line(img, (int(vw/2+vsize*x0), int(vsize/2+vsize*y0)),
+                 (int(vw/2+vsize*x1), int(vsize/2+vsize*y1)), 255)
 
     maze = make_maze(w, h)
     w, h = w*2+1, h*2+1
-    vw = max(vw, w*16)
+    vw = max(vsize, w*16)
 
     x, y, dx, dy = 1, 1, 1, 0
     k = None
@@ -70,7 +69,7 @@ def main(w = 18, h = 9, vw = 1280, vh = 1024, make_maze = randomized_prim):
         elif k == 'd':
             dx, dy = -dy, dx
             
-        img = np.zeros((vh + h*16, vw), np.uint8)
+        img = np.zeros((vsize + h*16, vw), np.uint8)
 
         # 3D描画
         n, z0, z1 = 0, 2, 4
@@ -92,7 +91,7 @@ def main(w = 18, h = 9, vw = 1280, vh = 1024, make_maze = randomized_prim):
             line(-1/z0, ud/z0, 1/z0, ud/z0) # 最奥の横線
 
         # 2D描画
-        x0, y0 = vw//2-w*8, vh
+        x0, y0 = vw//2-w*8, vsize
         for j in range(h):
             for i in range(w):
                 cv2.rectangle(img, (x0+i*16, y0+j*16), (x0+i*16+16, y0+j*16+16),
@@ -111,18 +110,16 @@ if __name__ == '__main__':
                         help = '迷路の横幅(既定値 18)')
     parser.add_argument('--height', type = int, default = 9,
                         help = '迷路の縦幅(既定値 9)')
-    parser.add_argument('--vwidth', type = int, default = 1280,
-                        help = '3D迷路表示部の横幅(既定値 1280)')
-    parser.add_argument('--vheight', type = int, default = 1024,
-                        help = '3D迷路表示部の縦幅(既定値 1024)')
+    parser.add_argument('--vsize', type = int, default = 1024,
+                        help = '3D迷路表示部の一辺の長さ(既定値 1024)')
     parser.add_argument('--gen', default = 'prim',
                         help = '迷路生成アルゴリズム(prim又はdfs)')
     args = parser.parse_args()
 
     gens = {'prim': randomized_prim, 'dfs': recursive_backtracker}
-    if (args.width > 0 and args.height > 0 and args.vheight > 0 and
+    if (args.width > 0 and args.height > 0 and args.vsize > 0 and
         args.gen in gens):
-        main(args.width, args.height, args.vwidth, args.vheight, gens[args.gen])
+        main(args.width, args.height, args.vsize, gens[args.gen])
     else:
         print('Invalid arguments:', vars(args))
         sys.exit(1)
