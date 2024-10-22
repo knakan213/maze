@@ -26,7 +26,7 @@ def randomized_prim(w, h):
             if not ({(x2+dx, y2+dy) for dx, dy in directions} & unvisited):
                 front.remove((x2, y2))
     return maze
-                
+
 def recursive_backtracker(w, h):
     maze = [[1-(x*y)%2 for x in range(2*w+1)] for y in range(2*h+1)]
     unvisited = {(x, y) for x in range(w) for y in range(h)}
@@ -40,8 +40,8 @@ def recursive_backtracker(w, h):
     return maze
 
 def window_exist(name):
-    # ウインドウが閉じられたかはバックエンドがQtの場合WND_PROP_VISIBLEで調べられるが
-    # GTKの場合は判別出来ず-1.0が返る。その場合WND_PROP_AUTOSIZEで調べられる
+    # ウインドウが閉じられたかはWND_PROP_VISIBLEで調べるが、GTKバックエンドの場合は
+    # このプロパティは無効で常に-1.0を返す。その場合WND_PROP_AUTOSIZEで調べられる。
     r = cv2.getWindowProperty(name, cv2.WND_PROP_VISIBLE)
     if r == -1.0:
         r = cv2.getWindowProperty(name, cv2.WND_PROP_AUTOSIZE)
@@ -49,58 +49,59 @@ def window_exist(name):
 
 def main(w, h, vsize, make_maze):
     def line(x0, y0, x1, y1):
-        cv2.line(img, (int(vw/2+vsize*x0), int(vsize/2+vsize*y0)),
-                 (int(vw/2+vsize*x1), int(vsize/2+vsize*y1)), 255)
+        # 3D表示部の左上を(-1/2, -1/2)、右下を(1/2, 1/2)とする座標で
+        # 指定された線及びその線をx軸に対して対称移動した線を引く
+        for ud in (-1, 1):
+            cv2.line(img, (int(vw/2+vsize*x0), int(vsize/2+vsize*y0*ud)),
+                     (int(vw/2+vsize*x1), int(vsize/2+vsize*y1*ud)), 255)
 
     maze = make_maze(w, h)
     w, h = w*2+1, h*2+1
-    vw = max(vsize, w*16)
+    s = 16 # 2D表示で各セルを表す正方形の一辺の長さ(ドット数)
+    vw = max(vsize, w*s)
 
     x, y, dx, dy = 1, 1, 1, 0
     k = None
     cv2.namedWindow(title)
     while k != 'q' and window_exist(title):
-        if k == 'w' and not maze[y+dy][x+dx]:
-            x, y = x+dx, y+dy
-        elif k == 's' and not maze[y-dy][x-dx]:
-            x, y = x-dx, y-dy
-        elif k == 'a':
-            dx, dy = dy, -dx
-        elif k == 'd':
-            dx, dy = -dy, dx
-            
-        img = np.zeros((vsize + h*16, vw), np.uint8)
+        d = {'w': (x+dx, y+dy, dx, dy), 's': (x-dx, y-dy, dx, dy),
+             'a': (x, y, dy, -dx), 'd': (x, y, -dy, dx), None: (x, y, dx, dy)}
+        if k in d and not maze[d[k][1]][d[k][0]]:
+            x, y, dx, dy = d[k]
 
-        # 3D描画
-        n, z0, z1 = 0, 2, 4
-        # 現在位置から視線の方向に壁に当るまで一歩づつ進む
-        while maze[y+n*dy][x+n*dx] == 0:
-            for lr in (-1, 1): # 左右
-                for ud in (-1, 1): # 上下
+            img = np.zeros((vsize + h*s, vw), np.uint8)
+
+            # 3D描画。上下対称になるので、下側(y軸正方向)だけline()に指定する
+            n = 0
+            # 現在位置から視線の方向に壁に当るまで一歩づつ進めて考える
+            while maze[y+n*dy][x+n*dx] == 0:
+                for lr in (-1, 1): # 左側(-1)と右側(1)に分けて描画
+                    # セルの(表示部分の)隅の座標。手前(x0, y0)と奥(x1, y1)
+                    x0, y0, x1, y1 = (a/(8*z) for z in (max(n-1/2, 1/4), n+1/2)
+                                      for a in (lr, 1))
                     if maze[y+n*dy+dx*lr][x+n*dx-dy*lr]: # 横が壁の場合
-                        line(lr/z0, ud/z0, lr/z1, ud/z1) # 奥に伸びる線
+                        line(x0, y0, x1, y1) # 奥に伸びる線
                     else: # 横が道の場合
                         if n:
-                            line(lr/z0, ud/z0, lr/z0, 0) # 手前の縦線
-                        line(lr/z0, ud/z1, lr/z1, ud/z1) # 奥の横線
+                            line(x0, y0, x0, 0) # 手前の縦線
+                        line(x0, y1, x1, y1) # 奥の横線
                     if (maze[y+n*dy+dy][x+n*dx+dx] ==      # 横と一歩先のセルが
                         maze[y+n*dy+dx*lr][x+n*dx-dy*lr]): # 共に壁か共に道の場合
-                        line(lr/z1, 0, lr/z1, ud/z1) # 奥の縦線
-            n, z0, z1 = n+1, z1, z1+8
-        for ud in (-1, 1): # 上下
-            line(-1/z0, ud/z0, 1/z0, ud/z0) # 最奥の横線
+                        line(x1, 0, x1, y1) # 奥の縦線
+                n += 1
+            line(-x1, y1, x1, y1) # 最奥の横線
 
-        # 2D描画
-        x0, y0 = vw//2-w*8, vsize
-        for j in range(h):
+            # 2D描画
+            x0, y0 = (vw-w*s)//2, vsize # 2D表示部左上の座標
             for i in range(w):
-                cv2.rectangle(img, (x0+i*16, y0+j*16), (x0+i*16+16, y0+j*16+16),
-                              255*maze[j][i], cv2.FILLED)
-        cv2.arrowedLine(img, (x0+x*16+8-dx*6, y0+y*16+8-dy*6),
-                        (x0+x*16+8+dx*5, y0+y*16+8+dy*5),
-                        255, tipLength=0.5, thickness = 2)
-
-        cv2.imshow(title, img)
+                for j in range(h):
+                    cv2.rectangle(img, (x0+i*s, y0+j*s), (x0+i*s+s, y0+j*s+s),
+                                  255*maze[j][i], cv2.FILLED)
+            cv2.arrowedLine(img,
+                            (x0+x*s+s//2-(s//2-2)*dx, y0+y*s+s//2-(s//2-2)*dy),
+                            (x0+x*s+s//2+(s//2-3)*dx, y0+y*s+s//2+(s//2-3)*dy),
+                            255, tipLength=0.5, thickness = 2)
+            cv2.imshow(title, img)
         k = chr(max(0, cv2.waitKey(50)))
     cv2.destroyAllWindows()
 
