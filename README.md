@@ -21,7 +21,7 @@ python3 maze.py
 ```
 python maze.py
 ```
-とすると迷路がランダムに生成され、上部に大きく3D表示、下部に小さく2D表示されます。2D表示の中の矢印はプレイヤーの視点の位置と向きを表わしており、開始時には迷路の一番左上のマスに右向きで置かれています。
+とすると迷路がランダムに生成され、上部に大きく3D表示、下部に小さく2D表示されます。2D表示の中の矢印はプレイヤーの位置と向きを表わしており、開始時には迷路の一番左上のマスに右向きで置かれています。
 
 ![screenshot](screenshot.png)
 
@@ -48,3 +48,4 @@ options:
 ```
 - 生成アルゴリズムにおいて迷路は正方形グリッドの各セルが上下左右のセルとの間に壁を持ったり持たなかったりするパターンとしてモデル化されており、上記オプションで指定する迷路のサイズもこの正方形グリッドの縦横のセル数のことですが、実際表示されるのはそれを壁にも空間セルと同じ厚みを持たせ各セル壁か空間かの二値グリッドとして表わしたものであり、迷路のサイズを横w、縦hと指定した場合、横2w+1、縦2h+1のグリッドになります。
 - 生成アルゴリズムは`prim`を指定した場合[randomized Prim's](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Iterative_randomized_Prim's_algorithm_(without_stack,_without_sets))、`dfs`を指定した場合[recursive backtracker](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search)になります。
+- 2D表示部では各セルは一辺VSIZE÷16ドットの正方形で表示されます。

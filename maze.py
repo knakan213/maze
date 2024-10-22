@@ -57,7 +57,7 @@ def main(w, h, vsize, make_maze):
 
     maze = make_maze(w, h)
     w, h = w*2+1, h*2+1
-    s = 16 # 2D表示で各セルを表す正方形の一辺の長さ(ドット数)
+    s = vsize//64 # 2D表示で各セルを表す正方形の一辺の長さ(ドット数)
     vw = max(vsize, w*s)
 
     x, y, dx, dy = 1, 1, 1, 0
@@ -95,11 +95,10 @@ def main(w, h, vsize, make_maze):
             x0, y0 = (vw-w*s)//2, vsize # 2D表示部左上の座標
             for i in range(w):
                 for j in range(h):
-                    cv2.rectangle(img, (x0+i*s, y0+j*s), (x0+i*s+s, y0+j*s+s),
-                                  255*maze[j][i], cv2.FILLED)
-            cv2.arrowedLine(img,
-                            (x0+x*s+s//2-(s//2-2)*dx, y0+y*s+s//2-(s//2-2)*dy),
-                            (x0+x*s+s//2+(s//2-3)*dx, y0+y*s+s//2+(s//2-3)*dy),
+                    cv2.rectangle(img, (x0+i*s, y0+j*s), (x0+i*s+s-1, y0+j*s+s-1),
+                                  maze[j][i] * 255, cv2.FILLED)
+            cv2.arrowedLine(img, (x0+x*s+(1-dx)*s//2, y0+y*s+(1-dy)*s//2),
+                            (x0+x*s+(1+dx)*s//2, y0+y*s+(1+dy)*s//2),
                             255, tipLength=0.5, thickness = 2)
             cv2.imshow(title, img)
         k = chr(max(0, cv2.waitKey(50)))
