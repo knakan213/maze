@@ -41,11 +41,11 @@ usage: maze.py [-h] [--width WIDTH] [--height HEIGHT] [--vsize VSIZE] [--gen GEN
 
 options:
   -h, --help       show this help message and exit
-  --width WIDTH    迷路の横幅(既定値 18)
-  --height HEIGHT  迷路の縦幅(既定値 9)
-  --vsize VSIZE    3D迷路表示部の一辺の長さ(既定値 1024)
-  --gen GEN        迷路生成アルゴリズム(prim又はdfs)
+  --width WIDTH    迷路の横幅(2以上) (既定値 18)
+  --height HEIGHT  迷路の縦幅(2以上) (既定値 9)
+  --vsize VSIZE    3D迷路表示部の一辺の長さ (既定値 1024)
+  --gen GEN        迷路生成アルゴリズム(prim, dfs, kabe) (既定値 prim)
 ```
 - 生成アルゴリズムにおいて迷路は正方形グリッドの各セルが上下左右のセルとの間に壁を持ったり持たなかったりするパターンとしてモデル化されており、上記オプションで指定する迷路のサイズもこの正方形グリッドの縦横のセル数のことですが、実際表示されるのはそれを壁にも空間セルと同じ厚みを持たせ各セル壁か空間かの二値グリッドとして表わしたものであり、迷路のサイズを横w、縦hと指定した場合、横2w+1、縦2h+1のグリッドになります。
-- 生成アルゴリズムは`prim`を指定した場合[randomized Prim's](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Iterative_randomized_Prim's_algorithm_(without_stack,_without_sets))、`dfs`を指定した場合[recursive backtracker](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search)になります。
+- 生成アルゴリズムは`prim`を指定した場合[randomized Prim's](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Iterative_randomized_Prim's_algorithm_(without_stack,_without_sets))、`dfs`を指定した場合[recursive backtracker](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Randomized_depth-first_search)、`kabe`を指定した場合[壁伸ばし法](https://www.google.com/search?q=%E5%A3%81%E4%BC%B8%E3%81%B0%E3%81%97%E6%B3%95)になります。
 - 2D表示部では各セルは一辺VSIZE÷16ドットの正方形で表示されます。

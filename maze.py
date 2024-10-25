@@ -39,6 +39,25 @@ def recursive_backtracker(w, h):
     rec(0, 0)
     return maze
 
+def kabe(w, h):
+    maze = [[1-(0 < x < 2*w and 0 < y < 2*h and (x%2 or y%2))
+             for x in range(2*w+1)] for y in range(2*h+1)]
+    # ここではセルではなくセルの頂点(壁の端点)に(0, 0)〜(w, h)の座標を振っている
+    unvisited = {(x, y) for x in range(1, w) for y in range(1, h)}
+    while unvisited:
+        stack = [random.choice(list(unvisited))]
+        while stack[-1] in unvisited:
+            x, y = stack.pop()
+            while all((x+dx, y+dy) in stack for dx, dy in directions):
+                stack.insert(0, (x, y))
+                x, y = stack.pop()
+            dx, dy = random.choice([(dx, dy) for dx, dy in directions
+                                    if (x+dx, y+dy) not in stack])
+            stack.extend([(x, y), (x+dx, y+dy)])
+            maze[y*2+dy][x*2+dx] = 1
+        unvisited -= set(stack)
+    return maze
+
 def window_exist(name):
     # ウインドウが閉じられたかはWND_PROP_VISIBLEで調べるが、GTKバックエンドの場合は
     # このプロパティは無効で常に-1.0を返す。その場合WND_PROP_AUTOSIZEで調べられる。
@@ -105,20 +124,18 @@ def main(w, h, vsize, make_maze):
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
+    gens = {'prim': randomized_prim, 'dfs': recursive_backtracker, 'kabe': kabe}
     parser = argparse.ArgumentParser()
-    parser.add_argument('--width', type = int, default = 18,
-                        help = '迷路の横幅(既定値 18)')
-    parser.add_argument('--height', type = int, default = 9,
-                        help = '迷路の縦幅(既定値 9)')
-    parser.add_argument('--vsize', type = int, default = 1024,
-                        help = '3D迷路表示部の一辺の長さ(既定値 1024)')
-    parser.add_argument('--gen', default = 'prim',
-                        help = '迷路生成アルゴリズム(prim又はdfs)')
+    for name, v, desc in (('width', 18, '迷路の横幅(2以上)'),
+                          ('height', 9, '迷路の縦幅(2以上)'),
+                          ('vsize', 1024, '3D迷路表示部の一辺の長さ'),
+                          ('gen', 'prim',
+                           '迷路生成アルゴリズム(%s)' % ', '.join(gens.keys()))):
+        parser.add_argument('--' + name, type = type(v), default = v,
+                            help = desc + ' (既定値 %s)' % v)
     args = parser.parse_args()
 
-    gens = {'prim': randomized_prim, 'dfs': recursive_backtracker}
-    if (args.width > 0 and args.height > 0 and args.vsize > 0 and
-        args.gen in gens):
+    if (args.width>1 and args.height>1 and args.vsize>0 and args.gen in gens):
         main(args.width, args.height, args.vsize, gens[args.gen])
     else:
         print('Invalid arguments:', vars(args))
