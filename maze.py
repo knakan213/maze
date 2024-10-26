@@ -71,8 +71,8 @@ def main(w, h, vsize, make_maze):
         # 3D表示部の左上を(-1/2, -1/2)、右下を(1/2, 1/2)とする座標で
         # 指定された線及びその線をx軸に対して対称移動した線を引く
         for ud in (-1, 1):
-            cv2.line(img, (int(vw/2+vsize*x0), int(vsize/2+vsize*y0*ud)),
-                     (int(vw/2+vsize*x1), int(vsize/2+vsize*y1*ud)), 255)
+            cv2.line(img, (round(vw/2+vsize*x0), round(vsize/2+vsize*y0*ud)),
+                     (round(vw/2+vsize*x1), round(vsize/2+vsize*y1*ud)), 255)
 
     maze = make_maze(w, h)
     w, h = w*2+1, h*2+1
@@ -96,7 +96,7 @@ def main(w, h, vsize, make_maze):
             while maze[y+n*dy][x+n*dx] == 0:
                 for lr in (-1, 1): # 左側(-1)と右側(1)に分けて描画
                     # セルの(表示部分の)隅の座標。手前(x0, y0)と奥(x1, y1)
-                    x0, y0, x1, y1 = (a/(8*z) for z in (max(n-1/2, 1/4), n+1/2)
+                    x0, y0, x1, y1 = (a/(4*z) for z in (max(n, 1/2), n+1)
                                       for a in (lr, 1))
                     if maze[y+n*dy+dx*lr][x+n*dx-dy*lr]: # 横が壁の場合
                         line(x0, y0, x1, y1) # 奥に伸びる線
@@ -135,7 +135,7 @@ if __name__ == '__main__':
                             help = desc + ' (既定値 %s)' % v)
     args = parser.parse_args()
 
-    if (args.width>1 and args.height>1 and args.vsize>0 and args.gen in gens):
+    if (args.width > 1 and args.height > 1 and args.vsize > 0 and args.gen in gens):
         main(args.width, args.height, args.vsize, gens[args.gen])
     else:
         print('Invalid arguments:', vars(args))
