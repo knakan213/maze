@@ -58,6 +58,36 @@ def kabe(w, h):
         unvisited -= set(stack)
     return maze
 
+def distances(maze):
+    '''道の各座標にゴール(右下)までの距離を対応付ける辞書'''
+    total = front = {(len(maze[0])-2, len(maze)-2): 0}
+    n = 1
+    while front:
+        front = {(x+dx, y+dy): n for x, y in front for dx, dy in directions
+                 if maze[y+dy][x+dx] == 0 if (x+dx, y+dy) not in total}
+        total.update(front)
+        n += 1
+    return total
+
+def route(dist, x, y, dx, dy):
+    '''位置(x, y)方向(dx, dy)のプレイヤーがゴール(右下)に行く道のりの言語化'''
+    n, r, b_move, b_turn = 0, '', False, False
+    while dist[(x, y)] > 0:
+        # n: 何番目の交差点(三叉路を含む)か。出発点は数えない
+        n += b_move and sum((x+dx, y+dy) in dist for dx, dy in directions) > 2
+        dx0, dy0 = next((dx, dy) for dx, dy in directions if (x+dx, y+dy) in dist
+                        if dist[(x+dx, y+dy)] < dist[(x, y)])
+        if not b_move: # 出発点の場合
+            r = {(dx, dy): 'そのまま', (dy, -dx): '左を向いて',
+                 (-dy, dx): '右を向いて', (-dx, -dy): '後ろを向いて'}[(dx0, dy0)]
+            r += '真っ直ぐ進み、'
+        elif (dx, dy) != (dx0, dy0):
+            r += ('突き当たり', '%s個目の交差点' % n)[(x+dx, y+dy) in dist]
+            r += 'を' + {(dy, -dx): '左', (-dy, dx): '右'}[(dx0, dy0)] + '、'
+            n, b_turn = 0, True
+        x, y, dx, dy, b_move = x+dx0, y+dy0, dx0, dy0, True
+    return r + 'と進むと' * b_turn + '突き当たりが' * b_move + 'ゴールです。\n'
+
 def window_exist(name):
     # ウインドウが閉じられたかはWND_PROP_VISIBLEで調べるが、GTKバックエンドの場合は
     # このプロパティは無効で常に-1.0を返す。その場合WND_PROP_AUTOSIZEで調べられる。
@@ -75,6 +105,7 @@ def main(w, h, vsize, make_maze):
                      (round(vw/2+vsize*x1), round(vsize/2+vsize*y1*ud)), 255)
 
     maze = make_maze(w, h)
+    dist = distances(maze)
     w, h = w*2+1, h*2+1
     s = vsize//64 # 2D表示で各セルを表す正方形の一辺の長さ(ドット数)
     vw = max(vsize, w*s)
@@ -85,7 +116,9 @@ def main(w, h, vsize, make_maze):
     while k != 'q' and window_exist(title):
         d = {'w': (x+dx, y+dy, dx, dy), 's': (x-dx, y-dy, dx, dy),
              'a': (x, y, dy, -dx), 'd': (x, y, -dy, dx), None: (x, y, dx, dy)}
-        if k in d and not maze[d[k][1]][d[k][0]]:
+        if k == ' ':
+            print(route(dist, x, y, dx, dy))
+        elif k in d and not maze[d[k][1]][d[k][0]]:
             x, y, dx, dy = d[k]
 
             img = np.zeros((vsize + h*s, vw), np.uint8)
